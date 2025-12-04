@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SecureChat Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 flex items-center justify-center min-h-screen p-4">
+  <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+    <h2 class="text-2xl font-bold mb-6 text-center">Login</h2>
+    <form id="loginForm" class="flex flex-col gap-4">
+      <input id="email" type="email" placeholder="Email" class="border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" required>
+      <input id="password" type="password" placeholder="Password" class="border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" required>
+      <button type="submit" class="bg-indigo-600 text-white p-2 rounded-lg hover:bg-indigo-700">Login</button>
+    </form>
+    <p class="text-sm mt-4 text-center">Don't have an account? <a href="signup.html" class="text-indigo-600">Sign Up</a></p>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAdQikqsyjWy43B1mqS4kEQhHWGhhmJdGk",
+      authDomain: "chat-d8ef1.firebaseapp.com",
+      projectId: "chat-d8ef1",
+      storageBucket: "chat-d8ef1.firebasestorage.app",
+      messagingSenderId: "591457470644",
+      appId: "1:591457470644:web:2f963eced0c097b349efe1"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const loginForm = document.getElementById("loginForm");
+
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        alert("✅ Login successful!");
+        window.location.href = "logged.html";
+      } catch (error) {
+        alert("⚠️ Wrong email or password. If you don't have an account, you may sign up.");
+      }
+    });
+  </script>
+</body>
+</html>

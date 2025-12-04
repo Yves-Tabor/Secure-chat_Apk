@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SecureChat</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Enable class-based dark mode -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+
+  <!-- CryptoJS (AES) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+</head>
+
+<body class="bg-slate-50 dark:bg-slate-900 min-h-screen flex items-center justify-center p-4 transition-colors duration-300">
+<main class="w-full max-w-5xl bg-white dark:bg-slate-800 shadow-lg rounded-2xl overflow-hidden grid grid-cols-1 md:grid-cols-3 md:h-[640px] transition-colors duration-300">
+
+
+    <!-- Sidebar -->
+    <aside class="md:col-span-1 border-r border-slate-100 p-4 flex flex-col">
+
+      <header class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold">SecureChat</h2>
+        <!-- Settings icon -->
+        <a href="settings.html"><button id="iconset" class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xl transition">
+          ⚙️
+        </button></a>
+        <!-- 🌙 / ☀️ TOGGLE BUTTON -->
+        <button id="themeToggle" class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xl transition">
+          🌙
+        </button>
+        
+      </header>
+
+      <!-- Avatar, username, and status -->
+    <div class="flex items-center gap-3">
+      <img id="avatar" class="w-12 h-12 rounded-full" src="" alt="Avatar">
+      <div>
+        <div id="usernameDisplay" class="font-semibold"></div>
+        <div id="statusDisplay" class="text-xs text-slate-500"></div>
+      </div>
+    </div>
+
+      <div class="mt-2 mb-4">
+        <label class="text-xs text-slate-500">Encryption</label>
+        <div class="flex items-center gap-2 mt-1">
+          <div id="encryptionIndicator" class="flex items-center gap-2 text-xs font-medium text-green-600">
+            End-to-end encrypted (demo)
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-2 p-2 border-b border-slate-300 mb-2">
+        <input id="searchInput" type="text" placeholder="Search user..." 
+        class="flex-1 rounded-md border border-slate-300 dark:border-slate-600 px-2 py-1 text-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+
+        <button id="searchBtn"
+          class="bg-indigo-600 text-white px-3 py-1 rounded-md text-sm hover:bg-indigo-700">Search</button>
+      </div>
+
+      <div>
+        <h3 class="text-sm p-4 font-medium mb-2">Chats</h3>
+        <div id="usersList" class="space-y-2 max-h-[36rem] overflow-auto"></div>
+      </div>
+
+      <footer class="mt-auto text-xs text-slate-400 pt-4 border-t border-slate-100">
+        <div>Device: Web • Secure transport: TLS</div>
+      </footer>
+
+    </aside>
+
+    <!-- Chat area -->
+    <section class="md:col-span-2 bg-gray-100 flex flex-col">
+
+      <div class="flex items-center justify-between p-4 border-b border-slate-100 dark:bg-gray-900">
+        <div id="chatHeader" class="font-semibold text-lg text-slate-700 dark:text-white">
+          Select a user to start chatting
+        </div>
+
+        <button id="clearChatBtn" class="px-3 py-1 text-xs bg-red-400 text-white rounded-md hover:bg-red-500">
+          Clear Chat
+        </button>
+      </div>
+
+      <div id="messages" class="flex-1 p-4 overflow-auto space-y-3 bg-gradient-to-b from-white via-slate-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-900 transition-colors duration-300">
+        <p class="text-center text-slate-400 mt-4">Start a secure chat</p>
+      </div>
+
+      <div class="p-3 border-t border-slate-100 dark:bg-gray-900 flex items-center gap-2">
+        <input id="inputMessage" type="text" placeholder="Type a message..."
+          class="flex-1 rounded-xl border border-slate-200 dark:border-slate-600 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-200">
+        <button id="sendBtn" class="px-4 py-2 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700">
+          Send
+        </button>
+      </div>
+
+    </section>
+  </main>
+
+<script type="module">
+  /* =========================================================
+   DARK MODE TOGGLE (FULLY WORKING + SAVED)
+=========================================================*/
+const themeBtn = document.getElementById("themeToggle");
+
+// Load theme from localStorage
+if (localStorage.getItem("theme") === "dark") {
+  document.documentElement.classList.add("dark");
+  themeBtn.textContent = "☀️";
+}
+
+// Toggle theme
+themeBtn.onclick = () => {
+  const root = document.documentElement;
+  const isDark = root.classList.toggle("dark");
+  themeBtn.textContent = isDark ? "☀️" : "🌙";
+  localStorage.setItem("theme", isDark ? "dark" : "light");
+};
+//Fetching theme
+const currentUserUID = localStorage.getItem("currentUserUID");
+const userData = JSON.parse(localStorage.getItem(`userData_${currentUserUID}`)) || {};
+document.documentElement.classList.toggle("dark", userData.theme === "dark");
+
+//Fetching status
+document.getElementById("statusDisplay").textContent = userData.status || "Hey there! I am using SecureChat";
+
+//Fetching profile
+document.getElementById("avatar").src = userData.profilePic || "https://via.placeholder.com/150/94a3b8/FFFFFF?text=User";
+document.getElementById("usernameDisplay").textContent = userData.username || "User";
+
+
+//Importing modules
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import {
+    getFirestore,
+    collection,
+    addDoc,
+    getDocs,
+    query,
+    where,
+    orderBy,
+    onSnapshot,
+    deleteDoc,
+    doc
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+
+  /* =========================================================
+    Demo E2EE: symmetric key derived from chatId + APP_SALT.
+    NOTE: This is a demo. Real E2EE requires proper ECDH or public-key exchange.
+  =========================================================*/
+  const APP_SALT = "demo_app_salt_replace_with_real_key_exchange";
+
+  // derive 256-bit key (CryptoJS WordArray) from chatId + APP_SALT (SHA256)
+  function deriveKeyFromChatId(chatId) {
+    return CryptoJS.SHA256(chatId + ":" + APP_SALT);
+  }
+
+  // encrypt with derived key: returns {ciphertext (base64), iv (base64)}
+  function encryptWithDerivedKey(chatId, plainText) {
+    const key = deriveKeyFromChatId(chatId);
+    const iv = CryptoJS.lib.WordArray.random(16);
+    const encrypted = CryptoJS.AES.encrypt(plainText, key, {
+      iv: iv,
+      mode: CryptoJS.mode.CBC,
+      padding: CryptoJS.pad.Pkcs7
+    });
+    return {
+      ciphertext: encrypted.toString(),                     // base64 ciphertext
+      iv: iv.toString(CryptoJS.enc.Base64)                // base64 iv
+    };
+  }
+
+  // decrypt using derived key (returns plaintext string or null on failure)
+  function decryptWithDerivedKey(chatId, ciphertextBase64, ivBase64) {
+    try {
+      const key = deriveKeyFromChatId(chatId);
+      const iv = CryptoJS.enc.Base64.parse(ivBase64);
+      const bytes = CryptoJS.AES.decrypt(ciphertextBase64, key, {
+        iv: iv,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+      });
+      const plain = bytes.toString(CryptoJS.enc.Utf8);
+      return plain || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /* =========================================================
+    Firebase init
+  =========================================================*/
+  const firebaseConfig = {
+    apiKey: "AIzaSyAdQikqsyjWy43B1mqS4kEQhHWGhhmJdGk",
+    authDomain: "chat-d8ef1.firebaseapp.com",
+    projectId: "chat-d8ef1",
+    storageBucket: "chat-d8ef1.firebasestorage.app",
+    messagingSenderId: "591457470644",
+    appId: "1:591457470644:web:2f963eced0c097b349efe1"
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  /* =========================================================
+    DOM
+  =========================================================*/
+  const usernameDisplay = document.getElementById("usernameDisplay");
+  const avatarEl = document.getElementById("avatar");
+  const usersListEl = document.getElementById("usersList");
+  const chatHeaderEl = document.getElementById("chatHeader");
+  const messagesEl = document.getElementById("messages");
+  const inputEl = document.getElementById("inputMessage");
+  const sendBtn = document.getElementById("sendBtn");
+  const searchInput = document.getElementById("searchInput");
+  const searchBtn = document.getElementById("searchBtn");
+  const clearChatBtn = document.getElementById("clearChatBtn");
+
+  let currentUser = null;
+  let currentChatUser = null;
+  let unsubscribeMessages = null;
+
+  /* =========================================================
+    Auth listener → load profile + chats
+  =========================================================*/
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = "home.html";
+      return;
+    }
+    currentUser = user;
+
+    // load profile username
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("uid", "==", user.uid));
+    const snapshot = await getDocs(q);
+    if (!snapshot.empty) {
+      const data = snapshot.docs[0].data();
+      usernameDisplay.textContent = data.username;
+      avatarEl.textContent = data.username?.[0]?.toUpperCase() || "!";
+    }
+
+    await loadChatUsers();
+  });
+
+  /* =========================================================
+    Load chat users (only users with messages with current user)
+  =========================================================*/
+  async function loadChatUsers() {
+    usersListEl.innerHTML = "<p class='text-slate-400 text-sm text-center'>Loading...</p>";
+
+    const usersRef = collection(db, "users");
+    const snap = await getDocs(usersRef);
+    const all = snap.docs.map(d => d.data()).filter(u => u.username);
+
+    const chatUsers = [];
+    for (const u of all) {
+      if (!currentUser) continue;
+      if (u.uid === currentUser.uid) continue;
+      const chatId = [currentUser.uid, u.uid].sort().join("_");
+      const messagesRef = collection(db, "chats", chatId, "messages");
+      const mSnap = await getDocs(messagesRef);
+      if (!mSnap.empty) chatUsers.push(u);
+    }
+
+    usersListEl.innerHTML = "";
+    if (!chatUsers.length) {
+      usersListEl.innerHTML = "<p class='text-slate-400 text-sm text-center mt-4'>No chats yet.</p>";
+      return;
+    }
+
+    chatUsers.forEach(u => {
+      const div = document.createElement("div");
+      div.className = "p-2 rounded-lg hover:bg-slate-50 cursor-pointer border border-slate-200 flex items-center justify-between";
+      div.innerHTML = `<span class="font-medium">${escapeHtml(u.username)}</span>`;
+      div.onclick = () => selectChat(u);
+      usersListEl.appendChild(div);
+    });
+  }
+
+  /* =========================================================
+    Message rendering (Option B timestamp: outside bubble on opposite side)
+  =========================================================*/
+  function displayMessages(snapshot) {
+    messagesEl.innerHTML = "";
+
+    if (snapshot.empty) {
+      messagesEl.innerHTML = "<p class='text-center text-slate-400 mt-4'>Start chatting</p>";
+      return;
+    }
+
+    snapshot.docs.forEach(docItem => {
+      const msg = docItem.data();
+      const isSender = msg.sender === currentUser.uid;
+
+      // wrapper aligns bubble left or right
+      const wrapper = document.createElement("div");
+      wrapper.className = "mb-2 flex flex-col";
+
+      // bubble container (keeps bubble width and margins)
+      const bubble = document.createElement("div");
+      bubble.className = (isSender
+        ? "bg-indigo-600 text-white rounded-tl-2xl rounded-tr-xl rounded-bl-2xl px-4 py-2 max-w-[70%] self-end shadow-sm"
+        : "bg-gray-200 text-gray-900 rounded-tl-xl rounded-tr-2xl rounded-br-2xl px-4 py-2 max-w-[70%] self-start shadow-sm");
+
+      // determine displayed text: decrypt if encrypted; else fallback to plain text
+      let displayText = "";
+      if (msg.encrypted && msg.ciphertext && msg.iv) {
+        const chatId = [currentUser.uid, currentChatUser.uid].sort().join("_");
+        const plain = decryptWithDerivedKey(chatId, msg.ciphertext, msg.iv);
+        if (plain !== null) {
+          displayText = plain;
+        } else {
+          displayText = "[encrypted] " + (msg.ciphertext ? (msg.ciphertext.slice(0,6) + "...") : "[no cipher]");
+        }
+      } else if (msg.text) {
+        displayText = msg.text;
+      } else {
+        displayText = "[unsupported message]";
+      }
+
+      // text node inside bubble
+      const textNode = document.createElement("div");
+      textNode.className = "break-words";
+      textNode.textContent = displayText;
+      bubble.appendChild(textNode);
+
+      // time element placed outside bubble on opposite side
+      const timeEl = document.createElement("div");
+      timeEl.className = "text-[12px] text-slate-500 mt-1";
+      // position using flex utility on wrapper (we'll create a small row)
+      const timeRow = document.createElement("div");
+      timeRow.className = "flex items-center";
+
+      if (isSender) {
+        // bubble first (right), time aligned to left of wrapper but pushed to the right visually:
+        // We'll add an empty spacer then time aligned right
+        timeRow.appendChild(document.createElement("div")); // spacer
+        timeRow.appendChild(timeEl);
+        timeRow.classList.add("justify-end");
+      } else {
+        timeRow.classList.add("justify-start");
+        timeRow.appendChild(timeEl);
+      }
+
+      const t = msg.timestamp ? (msg.timestamp.toDate ? msg.timestamp.toDate() : new Date(msg.timestamp)) : new Date();
+      timeEl.textContent = t.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+      // Append bubble and timeRow to wrapper in the right order:
+      if (isSender) {
+        wrapper.appendChild(bubble);
+        wrapper.appendChild(timeRow);
+      } else {
+        wrapper.appendChild(bubble);
+        wrapper.appendChild(timeRow);
+      }
+
+      messagesEl.appendChild(wrapper);
+    });
+
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  /* =========================================================
+    Select chat → subscribe to messages
+  =========================================================*/
+  function selectChat(user) {
+    currentChatUser = user;
+    chatHeaderEl.textContent = user.username;
+    messagesEl.innerHTML = "<p class='text-slate-400 text-sm text-center'>Loading messages...</p>";
+
+    if (unsubscribeMessages) unsubscribeMessages();
+
+    const chatId = [currentUser.uid, currentChatUser.uid].sort().join("_");
+    const messagesRef = collection(db, "chats", chatId, "messages");
+    const q = query(messagesRef, orderBy("timestamp"));
+
+    unsubscribeMessages = onSnapshot(q, snapshot => {
+      displayMessages(snapshot);
+    }, (err) => {
+      console.error("messages onSnapshot error:", err);
+    });
+  }
+
+  /* =========================================================
+    Send message: encrypt (client-side) → store ciphertext+iv
+  =========================================================*/
+  sendBtn.addEventListener("click", async () => {
+    if (!currentChatUser) return alert("Select a user first!");
+    const text = inputEl.value.trim();
+    if (!text) return;
+
+    const chatId = [currentUser.uid, currentChatUser.uid].sort().join("_");
+    const enc = encryptWithDerivedKey(chatId, text);
+
+    const messagesRef = collection(db, "chats", chatId, "messages");
+    await addDoc(messagesRef, {
+      sender: currentUser.uid,
+      ciphertext: enc.ciphertext,
+      iv: enc.iv,
+      encrypted: true,
+      timestamp: new Date()
+    });
+
+    inputEl.value = "";
+    await loadChatUsers();
+  });
+
+  /* =========================================================
+    Search user (loose match)
+  =========================================================*/
+  searchBtn.onclick = async () => {
+    const term = searchInput.value.trim().toLowerCase();
+    if (!term) return alert("Enter a username!");
+
+    const snap = await getDocs(collection(db, "users"));
+    const users = snap.docs.map(d => d.data());
+
+    const found = users.find(u =>
+      u.username && u.username.toLowerCase().includes(term) && u.uid !== currentUser.uid
+    );
+
+    if (!found) return alert("User not found!");
+    selectChat(found);
+  };
+
+  /* =========================================================
+    Clear chat (delete message docs)
+  =========================================================*/
+  clearChatBtn.onclick = async () => {
+    if (!currentChatUser) return alert("Select a user!");
+    if (!confirm("Clear this conversation?")) return;
+
+    const chatId = [currentUser.uid, currentChatUser.uid].sort().join("_");
+    const messagesRef = collection(db, "chats", chatId, "messages");
+    const snap = await getDocs(messagesRef);
+    for (const d of snap.docs) {
+      await deleteDoc(doc(db, "chats", chatId, "messages", d.id));
+    }
+    messagesEl.innerHTML = "<p class='text-center text-slate-400 mt-4'>Chat cleared.</p>";
+    await loadChatUsers();
+  };
+
+  /* =========================================================
+    Last seen timer
+  =========================================================*/
+  setInterval(() => {
+    document.getElementById("lastSeen").textContent = "a few seconds ago";
+  }, 3000);
+
+  /* =========================================================
+    Small helpers
+  =========================================================*/
+  function escapeHtml(s) {
+    if (!s) return s;
+    return s.replace(/[&<>"'`=\/]/g, function (c) {
+      return ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+        '/': '&#x2F;',
+        '`': '&#x60;',
+        '=': '&#x3D;'
+      })[c];
+    });
+  }
+</script>
+</body>
+</html>
