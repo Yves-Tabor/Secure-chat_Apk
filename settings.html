@@ -1,132 +1,570 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Profile Settings</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config = { darkMode: 'class' }</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings - SecureChat</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
 </head>
 
-<body class="bg-slate-50 dark:bg-slate-900 min-h-screen flex justify-center p-4 transition-colors duration-300">
+<body class="bg-slate-50 dark:bg-slate-900 min-h-screen p-4 transition-colors duration-300">
+  
+  <div class="max-w-3xl mx-auto">
+    
+    <!-- Header -->
+    <header class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 mb-6 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="logged.html" class="text-2xl hover:bg-slate-100 dark:hover:bg-slate-700 w-10 h-10 rounded-full flex items-center justify-center transition">←</a>
+        <h1 class="text-2xl font-bold text-slate-800 dark:text-white">Settings</h1>
+      </div>
+      
+      <!-- Theme Toggle -->
+      <button id="themeToggle" class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xl transition hover:scale-110">
+        🌙
+      </button>
+    </header>
 
-<main class="w-full max-w-md bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 transition-colors duration-300">
-  <h1 class="text-2xl font-semibold mb-6 text-slate-900 dark:text-white">Profile Settings</h1>
+    <!-- Profile Section -->
+    <section class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-6 text-slate-800 dark:text-white">Profile</h2>
+      
+      <!-- Profile Picture -->
+      <div class="flex items-center gap-6 mb-6 pb-6 border-b border-slate-200 dark:border-slate-700">
+        <div class="relative">
+          <img id="profilePicPreview" class="w-24 h-24 rounded-full object-cover border-4 border-indigo-100 dark:border-indigo-900" 
+               src="" alt="Profile">
+          <label for="profilePicInput" class="absolute bottom-0 right-0 bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer hover:bg-indigo-700 transition shadow-lg">
+            📷
+          </label>
+          <input type="file" id="profilePicInput" accept="image/*" class="hidden">
+        </div>
+        
+        <div class="flex-1">
+          <h3 id="currentUsername" class="text-lg font-semibold text-slate-800 dark:text-white">Loading...</h3>
+          <p id="currentEmail" class="text-sm text-slate-500 dark:text-slate-400"></p>
+          <button id="removePhotoBtn" class="mt-2 text-sm text-red-500 hover:text-red-600">Remove photo</button>
+        </div>
+      </div>
 
-  <!-- Profile picture -->
-  <div class="flex flex-col items-center mb-6">
-    <img id="profilePic" src="https://via.placeholder.com/150/94a3b8/FFFFFF?text=User"
-         class="w-24 h-24 rounded-full object-cover border border-slate-300 dark:border-slate-600">
-    <label for="profileUpload"
-      class="mt-3 text-sm text-indigo-600 dark:text-indigo-400 cursor-pointer hover:underline">
-      Change profile photo
-    </label>
-    <input type="file" id="profileUpload" accept="image/*" class="hidden">
+      <!-- Username -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Username</label>
+        <div class="flex gap-2">
+          <input type="text" id="usernameInput" 
+                 class="flex-1 rounded-lg border border-slate-300 dark:border-slate-600 px-4 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                 placeholder="Enter new username">
+          <button id="updateUsernameBtn" 
+                  class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium">
+            Update
+          </button>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Status</label>
+        <div class="flex gap-2">
+          <input type="text" id="statusInput" 
+                 class="flex-1 rounded-lg border border-slate-300 dark:border-slate-600 px-4 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                 placeholder="Hey there! I am using SecureChat">
+          <button id="updateStatusBtn" 
+                  class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium">
+            Update
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Security Section -->
+    <section class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-6 text-slate-800 dark:text-white">Security</h2>
+      
+      <!-- Change Password -->
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Current Password</label>
+          <input type="password" id="currentPassword" 
+                 class="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-4 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                 placeholder="Enter current password">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">New Password</label>
+          <input type="password" id="newPassword" 
+                 class="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-4 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                 placeholder="Enter new password">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Confirm New Password</label>
+          <input type="password" id="confirmPassword" 
+                 class="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-4 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                 placeholder="Confirm new password">
+        </div>
+        
+        <button id="changePasswordBtn" 
+                class="w-full py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium">
+          Change Password
+        </button>
+      </div>
+    </section>
+
+    <!-- Danger Zone -->
+    <section class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-6 text-red-600 dark:text-red-400">Danger Zone</h2>
+      
+      <button id="logoutBtn" 
+              class="w-full py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-medium mb-3">
+        🚪 Logout
+      </button>
+      
+      <button id="deleteAccountBtn" 
+              class="w-full py-3 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition font-medium">
+        Delete Account
+      </button>
+    </section>
+
+    <!-- Success/Error Messages -->
+    <div id="messageBox" class="hidden fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all">
+      Message
+    </div>
+
   </div>
 
-  <!-- Username -->
-  <div class="mb-4">
-    <label id="usernameLabel"
-      class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Username</label>
-    <input type="text" id="username" placeholder="Enter username"
-      class="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg
-             bg-white dark:bg-slate-700 text-slate-900 dark:text-white
-             focus:outline-none focus:ring-2 focus:ring-indigo-500">
-  </div>
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+    import { 
+      getAuth, 
+      onAuthStateChanged,
+      signOut,
+      updatePassword,
+      EmailAuthProvider,
+      reauthenticateWithCredential,
+      deleteUser
+    } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+    import { 
+      getFirestore, 
+      collection, 
+      doc, 
+      getDoc, 
+      setDoc, 
+      updateDoc, 
+      serverTimestamp,
+      query,
+      where,
+      getDocs,
+      deleteDoc
+    } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+    import { 
+      getStorage, 
+      ref, 
+      uploadBytes, 
+      getDownloadURL,
+      deleteObject
+    } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-storage.js";
 
-  <!-- Status -->
-  <div class="mb-4">
-    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label>
-    <input type="text" id="status" placeholder="What's on your mind?"
-      class="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg
-             bg-white dark:bg-slate-700 text-slate-900 dark:text-white
-             focus:outline-none focus:ring-2 focus:ring-indigo-500">
-  </div>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAdQikqsyjWy43B1mqS4kEQhHWGhhmJdGk",
+      authDomain: "chat-d8ef1.firebaseapp.com",
+      projectId: "chat-d8ef1",
+      storageBucket: "chat-d8ef1.firebasestorage.app",
+      messagingSenderId: "591457470644",
+      appId: "1:591457470644:web:2f963eced0c097b349efe1"
+    };
 
-  <!-- Theme toggle -->
-  <div class="flex items-center gap-3 mb-6">
-    <span class="text-slate-700 dark:text-slate-300 text-sm">Theme:</span>
-    <button id="themeToggle"
-      class="px-3 py-1 bg-slate-200 dark:bg-slate-700 rounded-md text-xl transition-colors duration-300">
-      🌙
-    </button>
-  </div>
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
 
-  <button id="saveBtn"
-    class="w-full py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700">
-    Save Changes
-  </button>
-</main>
+    let currentUser = null;
+    let userData = {};
+    let userDocId = null;
 
+    // DOM Elements
+    const themeToggle = document.getElementById('themeToggle');
+    const profilePicPreview = document.getElementById('profilePicPreview');
+    const profilePicInput = document.getElementById('profilePicInput');
+    const removePhotoBtn = document.getElementById('removePhotoBtn');
+    const currentUsername = document.getElementById('currentUsername');
+    const currentEmail = document.getElementById('currentEmail');
+    const usernameInput = document.getElementById('usernameInput');
+    const statusInput = document.getElementById('statusInput');
+    const updateUsernameBtn = document.getElementById('updateUsernameBtn');
+    const updateStatusBtn = document.getElementById('updateStatusBtn');
+    const currentPassword = document.getElementById('currentPassword');
+    const newPassword = document.getElementById('newPassword');
+    const confirmPassword = document.getElementById('confirmPassword');
+    const changePasswordBtn = document.getElementById('changePasswordBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+    const messageBox = document.getElementById('messageBox');
 
-<script>
-// ========== GET CURRENT USER ==========
-const currentUser = localStorage.getItem("currentUser");
+    // Theme Management - Fixed to sync with chat page
+    function applyTheme(theme) {
+      const isDark = theme === "dark";
+      document.documentElement.classList.toggle("dark", isDark);
+      themeToggle.textContent = isDark ? "☀️" : "🌙";
+      localStorage.setItem("theme", theme);
+    }
 
-// If no user logged → fields remain blank (your request)
-let userData = {};
-if (currentUser) {
-  userData = JSON.parse(localStorage.getItem(`userData_${currentUser}`)) || {};
-}
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme');
+      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+      applyTheme(theme);
+    }
 
-// ========== DOM ELEMENTS ==========
-const usernameInput = document.getElementById("username");
-const usernameLabel = document.getElementById("usernameLabel");
-const statusInput = document.getElementById("status");
-const profilePicEl = document.getElementById("profilePic");
-const profileUpload = document.getElementById("profileUpload");
-const themeToggleBtn = document.getElementById("themeToggle");
+    themeToggle.addEventListener('click', async () => {
+      const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      
+      applyTheme(newTheme);
+      
+      // Update in Firestore if user is logged in
+      if (currentUser && userDocId) {
+        try {
+          await updateDoc(doc(db, "users", userDocId), {
+            theme: newTheme,
+            updatedAt: serverTimestamp()
+          });
+          
+          // Update localStorage userData
+          const localData = localStorage.getItem(`userData_${currentUser.uid}`);
+          if (localData) {
+            const parsed = JSON.parse(localData);
+            parsed.theme = newTheme;
+            localStorage.setItem(`userData_${currentUser.uid}`, JSON.stringify(parsed));
+          }
+        } catch (err) {
+          console.error("Error updating theme:", err);
+        }
+      }
+    });
 
-// ========== FILL FIELDS IF LOGGED IN ==========
-usernameInput.value = userData.username || "";
-statusInput.value = userData.status || "";
-usernameLabel.textContent = currentUser ? `Username (current: ${userData.username || ""})` : "Username";
+    initTheme();
 
-profilePicEl.src = userData.profilePic || "https://via.placeholder.com/150/94a3b8/FFFFFF?text=User";
+    // Show message helper
+    function showMessage(text, isError = false) {
+      messageBox.textContent = text;
+      messageBox.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transition-all ${
+        isError ? 'bg-red-500' : 'bg-green-500'
+      } text-white`;
+      messageBox.classList.remove('hidden');
+      
+      setTimeout(() => {
+        messageBox.classList.add('hidden');
+      }, 3000);
+    }
 
-// ========== APPLY THEME ==========
-function applyTheme(theme) {
-  document.documentElement.classList.toggle("dark", theme === "dark");
-  themeToggleBtn.textContent = theme === "dark" ? "☀️" : "🌙";
-}
-applyTheme(userData.theme || "light");
+    // Load user data
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = 'index.html';
+        return;
+      }
 
-// ========== PROFILE UPLOAD ==========
-profileUpload.addEventListener("change", e => {
-  const file = e.target.files[0];
-  if (!file) return;
+      currentUser = user;
+      currentEmail.textContent = user.email;
 
-  const reader = new FileReader();
-  reader.onload = evt => {
-    profilePicEl.src = evt.target.result;
-    userData.profilePic = evt.target.result;
-  };
-  reader.readAsDataURL(file);
-});
+      try {
+        const usersRef = collection(db, "users");
+        const q = query(usersRef, where("uid", "==", user.uid));
+        const snapshot = await getDocs(q);
 
-// ========== THEME TOGGLE ==========
-themeToggleBtn.addEventListener("click", () => {
-  userData.theme = userData.theme === "dark" ? "light" : "dark";
-  applyTheme(userData.theme);
-});
+        if (!snapshot.empty) {
+          userDocId = snapshot.docs[0].id;
+          userData = snapshot.docs[0].data();
+          
+          currentUsername.textContent = userData.username || 'User';
+          usernameInput.placeholder = userData.username || 'Enter username';
+          statusInput.placeholder = userData.status || 'Hey there! I am using SecureChat';
+          
+          // Set profile picture
+          if (userData.photoURL) {
+            profilePicPreview.src = userData.photoURL;
+          } else {
+            profilePicPreview.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.username || 'U')}&background=random`;
+          }
+          
+          // Apply theme from Firestore
+          if (userData.theme) {
+            applyTheme(userData.theme);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading user:", error);
+        showMessage("Error loading profile data", true);
+      }
+    });
 
-// ========== SAVE CHANGES ==========
-document.getElementById("saveBtn").addEventListener("click", () => {
-  if (!currentUser) {
-    alert("No logged-in user detected.");
-    return;
-  }
+    // Profile picture upload - Fixed
+    profilePicInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
 
-  userData.username = usernameInput.value;
-  userData.status = statusInput.value;
+      if (file.size > 5 * 1024 * 1024) {
+        showMessage("Image must be less than 5MB", true);
+        return;
+      }
 
-  // Save
-  localStorage.setItem(`userData_${currentUser}`, JSON.stringify(userData));
+      if (!file.type.startsWith('image/')) {
+        showMessage("Please select an image file", true);
+        return;
+      }
 
-  alert("Profile updated!");
-  window.location.href = "logged.html";
-});
-</script>
+      try {
+        showMessage("Uploading image...");
+        
+        // Create storage reference
+        const storageRef = ref(storage, `profilePics/${currentUser.uid}/${Date.now()}_${file.name}`);
+        
+        // Upload file
+        const snapshot = await uploadBytes(storageRef, file);
+        
+        // Get download URL
+        const photoURL = await getDownloadURL(snapshot.ref);
+        
+        // Update Firestore
+        if (userDocId) {
+          await updateDoc(doc(db, "users", userDocId), {
+            photoURL: photoURL,
+            updatedAt: serverTimestamp()
+          });
 
+          // Update preview
+          profilePicPreview.src = photoURL;
+          userData.photoURL = photoURL;
+          
+          // Update localStorage
+          const localData = localStorage.getItem(`userData_${currentUser.uid}`);
+          if (localData) {
+            const parsed = JSON.parse(localData);
+            parsed.profilePic = photoURL;
+            parsed.photoURL = photoURL;
+            localStorage.setItem(`userData_${currentUser.uid}`, JSON.stringify(parsed));
+          } else {
+            localStorage.setItem(`userData_${currentUser.uid}`, JSON.stringify({
+              username: userData.username,
+              status: userData.status,
+              profilePic: photoURL,
+              photoURL: photoURL,
+              theme: localStorage.getItem('theme') || 'light'
+            }));
+          }
+
+          showMessage("Profile picture updated successfully!");
+        }
+      } catch (error) {
+        console.error("Error uploading photo:", error);
+        showMessage("Failed to upload photo: " + error.message, true);
+      }
+    });
+
+    // Remove photo
+    removePhotoBtn.addEventListener('click', async () => {
+      if (!confirm('Remove profile picture?')) return;
+
+      try {
+        if (userDocId) {
+          await updateDoc(doc(db, "users", userDocId), {
+            photoURL: null,
+            updatedAt: serverTimestamp()
+          });
+
+          const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.username || 'U')}&background=random`;
+          profilePicPreview.src = defaultAvatar;
+          userData.photoURL = null;
+          
+          // Update localStorage
+          const localData = localStorage.getItem(`userData_${currentUser.uid}`);
+          if (localData) {
+            const parsed = JSON.parse(localData);
+            parsed.profilePic = defaultAvatar;
+            parsed.photoURL = null;
+            localStorage.setItem(`userData_${currentUser.uid}`, JSON.stringify(parsed));
+          }
+
+          showMessage("Profile picture removed");
+        }
+      } catch (error) {
+        console.error("Error removing photo:", error);
+        showMessage("Failed to remove photo", true);
+      }
+    });
+
+    // Update username
+    updateUsernameBtn.addEventListener('click', async () => {
+      const newUsername = usernameInput.value.trim();
+      if (!newUsername) {
+        showMessage("Please enter a username", true);
+        return;
+      }
+
+      if (newUsername.length < 3) {
+        showMessage("Username must be at least 3 characters", true);
+        return;
+      }
+
+      try {
+        if (userDocId) {
+          await updateDoc(doc(db, "users", userDocId), {
+            username: newUsername,
+            updatedAt: serverTimestamp()
+          });
+
+          currentUsername.textContent = newUsername;
+          userData.username = newUsername;
+          
+          // Update localStorage
+          const localData = localStorage.getItem(`userData_${currentUser.uid}`);
+          if (localData) {
+            const parsed = JSON.parse(localData);
+            parsed.username = newUsername;
+            localStorage.setItem(`userData_${currentUser.uid}`, JSON.stringify(parsed));
+          }
+
+          usernameInput.value = '';
+          showMessage("Username updated successfully!");
+        }
+      } catch (error) {
+        console.error("Error updating username:", error);
+        showMessage("Failed to update username", true);
+      }
+    });
+
+    // Update status - Fixed synchronization
+    updateStatusBtn.addEventListener('click', async () => {
+      const newStatus = statusInput.value.trim();
+      if (!newStatus) {
+        showMessage("Please enter a status", true);
+        return;
+      }
+
+      try {
+        if (userDocId) {
+          await updateDoc(doc(db, "users", userDocId), {
+            status: newStatus,
+            updatedAt: serverTimestamp()
+          });
+
+          userData.status = newStatus;
+          
+          // Update localStorage - This is critical for syncing with chat page
+          const localData = localStorage.getItem(`userData_${currentUser.uid}`);
+          if (localData) {
+            const parsed = JSON.parse(localData);
+            parsed.status = newStatus;
+            localStorage.setItem(`userData_${currentUser.uid}`, JSON.stringify(parsed));
+          } else {
+            // Create new localStorage entry if it doesn't exist
+            localStorage.setItem(`userData_${currentUser.uid}`, JSON.stringify({
+              username: userData.username || 'User',
+              status: newStatus,
+              profilePic: userData.photoURL || profilePicPreview.src,
+              photoURL: userData.photoURL,
+              theme: localStorage.getItem('theme') || 'light'
+            }));
+          }
+
+          statusInput.value = '';
+          showMessage("Status updated successfully!");
+        }
+      } catch (error) {
+        console.error("Error updating status:", error);
+        showMessage("Failed to update status", true);
+      }
+    });
+
+    // Change password
+    changePasswordBtn.addEventListener('click', async () => {
+      const current = currentPassword.value;
+      const newPass = newPassword.value;
+      const confirm = confirmPassword.value;
+
+      if (!current || !newPass || !confirm) {
+        showMessage("Please fill all password fields", true);
+        return;
+      }
+
+      if (newPass.length < 6) {
+        showMessage("Password must be at least 6 characters", true);
+        return;
+      }
+
+      if (newPass !== confirm) {
+        showMessage("New passwords don't match", true);
+        return;
+      }
+
+      try {
+        const credential = EmailAuthProvider.credential(currentUser.email, current);
+        await reauthenticateWithCredential(currentUser, credential);
+        await updatePassword(currentUser, newPass);
+
+        currentPassword.value = '';
+        newPassword.value = '';
+        confirmPassword.value = '';
+        
+        showMessage("Password changed successfully!");
+      } catch (error) {
+        console.error("Error changing password:", error);
+        if (error.code === 'auth/wrong-password') {
+          showMessage("Current password is incorrect", true);
+        } else {
+          showMessage("Failed to change password", true);
+        }
+      }
+    });
+
+    // Logout
+    logoutBtn.addEventListener('click', async () => {
+      if (!confirm('Are you sure you want to logout?')) return;
+
+      try {
+        await signOut(auth);
+        localStorage.removeItem(`userData_${currentUser.uid}`);
+        window.location.href = 'index.html';
+      } catch (error) {
+        console.error("Error logging out:", error);
+        showMessage("Failed to logout", true);
+      }
+    });
+
+    // Delete account
+    deleteAccountBtn.addEventListener('click', async () => {
+      const confirmText = prompt('This will permanently delete your account. Type "DELETE" to confirm:');
+      
+      if (confirmText !== 'DELETE') {
+        return;
+      }
+
+      try {
+        if (userDocId) {
+          await deleteDoc(doc(db, "users", userDocId));
+        }
+
+        await deleteUser(currentUser);
+        localStorage.removeItem(`userData_${currentUser.uid}`);
+        
+        showMessage("Account deleted");
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 1500);
+      } catch (error) {
+        console.error("Error deleting account:", error);
+        showMessage("Failed to delete account. You may need to re-login first.", true);
+      }
+    });
+  </script>
 </body>
 </html>
