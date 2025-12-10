@@ -31,8 +31,14 @@
       </button>
     </header>
 
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-8 mb-6 text-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-3"></div>
+      <p class="text-slate-600 dark:text-slate-400">Loading profile...</p>
+    </div>
+
     <!-- Profile Section -->
-    <section class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 mb-6">
+    <section id="profileSection" class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 mb-6 hidden">
       <h2 class="text-xl font-semibold mb-6 text-slate-800 dark:text-white">Profile</h2>
       
       <!-- Profile Picture -->
@@ -44,6 +50,10 @@
             📷
           </label>
           <input type="file" id="profilePicInput" accept="image/*" class="hidden">
+          <!-- Upload Progress -->
+          <div id="uploadProgress" class="hidden absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+            <div class="text-white text-xs font-bold">Uploading...</div>
+          </div>
         </div>
         
         <div class="flex-1">
@@ -83,7 +93,7 @@
     </section>
 
     <!-- Security Section -->
-    <section class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 mb-6">
+    <section id="securitySection" class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 mb-6 hidden">
       <h2 class="text-xl font-semibold mb-6 text-slate-800 dark:text-white">Security</h2>
       
       <!-- Change Password -->
@@ -117,7 +127,7 @@
     </section>
 
     <!-- Exit -->
-    <section class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 mb-6">
+    <section id="exitSection" class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 mb-6 hidden">
       <h2 class="text-xl font-semibold mb-6 text-black dark:text-red-400">Quit App</h2>
       
       <button id="logoutBtn" 
@@ -161,7 +171,8 @@
       query,
       where,
       getDocs,
-      deleteDoc
+      deleteDoc,
+      limit
     } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
     import { 
       getStorage, 
@@ -191,9 +202,14 @@
     let userDocId = null;
 
     // DOM Elements
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const profileSection = document.getElementById('profileSection');
+    const securitySection = document.getElementById('securitySection');
+    const exitSection = document.getElementById('exitSection');
     const themeToggle = document.getElementById('themeToggle');
     const profilePicPreview = document.getElementById('profilePicPreview');
     const profilePicInput = document.getElementById('profilePicInput');
+    const uploadProgress = document.getElementById('uploadProgress');
     const removePhotoBtn = document.getElementById('removePhotoBtn');
     const currentUsername = document.getElementById('currentUsername');
     const currentEmail = document.getElementById('currentEmail');
@@ -208,6 +224,14 @@
     const logoutBtn = document.getElementById('logoutBtn');
     const deleteAccountBtn = document.getElementById('deleteAccountBtn');
     const messageBox = document.getElementById('messageBox');
+
+    // Show/hide sections
+    function showContent() {
+      loadingIndicator.classList.add('hidden');
+      profileSection.classList.remove('hidden');
+      securitySection.classList.remove('hidden');
+      exitSection.classList.remove('hidden');
+    }
 
     // Show message helper
     function showMessage(text, isError = false) {
@@ -250,7 +274,7 @@
       }
     });
 
-    // Load user data from database
+    // Load user data - SUPER FAST with caching
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         window.location.href = 'index.html';
@@ -260,43 +284,78 @@
       currentUser = user;
       currentEmail.textContent = user.email;
 
+      // Try to load from cache first for instant display
+      const cachedData = sessionStorage.getItem(`userSettings_${user.uid}`);
+      if (cachedData) {
+        try {
+          const cached = JSON.parse(cachedData);
+          displayUserData(cached.userData, cached.userDocId);
+          showContent();
+        } catch (e) {
+          console.error("Cache parse error:", e);
+        }
+      }
+
+      // Then fetch fresh data from database in background
       try {
         const usersRef = collection(db, "users");
-        const q = query(usersRef, where("uid", "==", user.uid));
+        const q = query(usersRef, where("uid", "==", user.uid), limit(1));
         const snapshot = await getDocs(q);
 
         if (!snapshot.empty) {
           userDocId = snapshot.docs[0].id;
           userData = snapshot.docs[0].data();
           
-          // Update UI
-          currentUsername.textContent = userData.username || 'User';
-          usernameInput.placeholder = userData.username || 'Enter username';
-          statusInput.placeholder = userData.status || 'Hey there! I am using SecureChat';
+          // Cache the data
+          sessionStorage.setItem(`userSettings_${user.uid}`, JSON.stringify({
+            userData: userData,
+            userDocId: userDocId
+          }));
           
-          // Set profile picture
-          if (userData.photoURL) {
-            profilePicPreview.src = userData.photoURL;
-          } else {
-            profilePicPreview.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.username || 'U')}&background=random`;
-          }
-          
-          // Apply theme from database
-          if (userData.theme) {
-            applyThemeFromDB(userData.theme);
+          // Update UI with fresh data
+          displayUserData(userData, userDocId);
+          showContent();
+        } else {
+          if (!cachedData) {
+            showMessage("User profile not found", true);
+            showContent();
           }
         }
       } catch (error) {
         console.error("Error loading user:", error);
-        showMessage("Error loading profile data", true);
+        if (!cachedData) {
+          showMessage("Error loading profile data", true);
+          showContent();
+        }
       }
     });
 
-    // Profile picture upload
+    // Helper function to display user data
+    function displayUserData(data, docId) {
+      userDocId = docId;
+      userData = data;
+      
+      currentUsername.textContent = data.username || 'User';
+      usernameInput.placeholder = data.username || 'Enter username';
+      statusInput.placeholder = data.status || 'Hey there! I am using SecureChat';
+      
+      if (data.photoURL) {
+        profilePicPreview.src = data.photoURL;
+      } else {
+        profilePicPreview.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.username || 'U')}&background=random`;
+      }
+      
+      if (data.theme) {
+        applyThemeFromDB(data.theme);
+      }
+    }
+
+    // Profile picture upload - FIXED with better error handling
     profilePicInput.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
+      // Validate file
       if (file.size > 5 * 1024 * 1024) {
         showMessage("Image must be less than 5MB", true);
         return;
@@ -308,27 +367,67 @@
       }
 
       try {
-        showMessage("Uploading image...");
+        // Show upload progress
+        uploadProgress.classList.remove('hidden');
         
-        const storageRef = ref(storage, `profilePics/${currentUser.uid}/${Date.now()}_${file.name}`);
-        const snapshot = await uploadBytes(storageRef, file);
-        const photoURL = await getDownloadURL(snapshot.ref);
+        // Create unique filename
+        const timestamp = Date.now();
+        const filename = `${currentUser.uid}_${timestamp}.jpg`;
+        const storageRef = ref(storage, `profilePics/${filename}`);
         
+        // Convert to blob for better compatibility
+        const blob = await file.arrayBuffer();
+        const imageBlob = new Blob([blob], { type: file.type });
+        
+        // Upload file
+        console.log("Starting upload...");
+        const uploadTask = await uploadBytes(storageRef, imageBlob, {
+          contentType: file.type,
+          customMetadata: {
+            uploadedBy: currentUser.uid
+          }
+        });
+        
+        console.log("Upload complete, getting URL...");
+        
+        // Get download URL
+        const photoURL = await getDownloadURL(uploadTask.ref);
+        console.log("Got URL:", photoURL);
+        
+        // Update Firestore
         if (userDocId) {
           await updateDoc(doc(db, "users", userDocId), {
             photoURL: photoURL,
             updatedAt: serverTimestamp()
           });
 
+          // Update UI
           profilePicPreview.src = photoURL;
           userData.photoURL = photoURL;
           
+          // Update cache
+          sessionStorage.setItem(`userSettings_${currentUser.uid}`, JSON.stringify({
+            userData: userData,
+            userDocId: userDocId
+          }));
+          
+          uploadProgress.classList.add('hidden');
           showMessage("Profile picture updated successfully!");
         }
       } catch (error) {
+        uploadProgress.classList.add('hidden');
         console.error("Error uploading photo:", error);
-        showMessage("Failed to upload photo: " + error.message, true);
+        console.error("Error details:", error.code, error.message);
+        
+        if (error.code === 'storage/unauthorized') {
+          showMessage("Storage permission denied. Check Firebase Storage rules.", true);
+        } else {
+          showMessage("Failed to upload photo: " + error.message, true);
+        }
       }
+      
+      // Reset file input
+      profilePicInput.value = '';
     });
 
     // Remove photo
@@ -378,6 +477,12 @@
           userData.username = newUsername;
           usernameInput.value = '';
           
+          // Update cache
+          sessionStorage.setItem(`userSettings_${currentUser.uid}`, JSON.stringify({
+            userData: userData,
+            userDocId: userDocId
+          }));
+          
           showMessage("Username updated successfully!");
         }
       } catch (error) {
@@ -403,6 +508,12 @@
 
           userData.status = newStatus;
           statusInput.value = '';
+          
+          // Update cache
+          sessionStorage.setItem(`userSettings_${currentUser.uid}`, JSON.stringify({
+            userData: userData,
+            userDocId: userDocId
+          }));
           
           showMessage("Status updated successfully!");
         }
