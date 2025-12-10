@@ -199,6 +199,40 @@ let currentChatUser = null;
 let unsubscribeMessages = null;
 let unsubscribeUserData = null;
 
+/* =========================================================
+  Theme Management
+=========================================================*/
+function applyTheme(theme) {
+  const isDark = theme === "dark";
+  document.documentElement.classList.toggle("dark", isDark);
+}
+
+if (themeBtn) {
+  themeBtn.onclick = async () => {
+    const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    applyTheme(newTheme);
+    
+    if (currentUser) {
+      try {
+        const usersRef = collection(db, "users");
+        const q = query(usersRef, where("uid", "==", currentUser.uid));
+        const snapshot = await getDocs(q);
+        
+        if (!snapshot.empty) {
+          const userDocId = snapshot.docs[0].id;
+          await updateDoc(doc(db, "users", userDocId), {
+            theme: newTheme,
+            updatedAt: serverTimestamp()
+          });
+        }
+      } catch (error) {
+        console.error("Error updating theme:", error);
+      }
+    }
+  };
+}
 
 /* =========================================================
   Update UI with user data
